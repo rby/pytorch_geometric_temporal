@@ -19,13 +19,24 @@ class METRLADatasetLoader(object):
     Data-Driven Traffic Forecasting" <https://arxiv.org/abs/1707.01926>`_
     """
 
-    def __init__(self, raw_data_dir=os.path.join(os.getcwd(), "data")):
+    def __init__(
+        self, raw_data_dir=os.path.join(os.getcwd(), "data"), check_ssl: bool = False
+    ):
         super(METRLADatasetLoader, self).__init__()
         self.raw_data_dir = raw_data_dir
+        self._check_ssl = check_ssl
         self._read_web_data()
 
     def _download_url(self, url, save_path):  # pragma: no cover
-        with urllib.request.urlopen(url) as dl_file:
+        context = None
+        if not self._check_ssl:
+            import ssl
+
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+
+        with urllib.request.urlopen(url, context=context) as dl_file:
             with open(save_path, "wb") as out_file:
                 out_file.write(dl_file.read())
 
